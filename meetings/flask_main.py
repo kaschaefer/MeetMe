@@ -7,6 +7,10 @@ import uuid
 import json
 import logging
 
+import calculations
+from calculations import getEventsFromAllCalendars
+from calculations import getBlocks
+
 # Date handling 
 import arrow # Replacement for datetime, based on moment.js
 # import datetime # But we still need time
@@ -47,10 +51,23 @@ APPLICATION_NAME = 'MeetMe class project'
 @app.route("/")
 @app.route("/index")
 def index():
-  app.logger.debug("Entering index")
+
+    return render_template('index.html')
+
+@app.route("/createFinish")
+def createFinish():
+    return render_template('createFinish.html')
+
+@app.route("/find")
+def find():
+    return render_template('find.html')
+
+@app.route("/create")
+def create():
+  app.logger.debug("Entering create")
   if 'begin_time' not in flask.session or 'begin_time' == "":
     init_session_values()
-  return render_template('index.html')
+  return render_template('create.html')
 
 @app.route("/choose")
 def choose():
@@ -70,7 +87,7 @@ def choose():
     gcal_service = get_gcal_service(credentials)
     app.logger.debug("Returned from get_gcal_service")
     flask.g.calendars = list_calendars(gcal_service)
-    return render_template('index.html')
+    return render_template('create.html')
 
 
 
@@ -90,82 +107,24 @@ def get_busy_times():
     #Get beginning and end dates of date range
     begin = arrow.get(flask.session['begin_date'])
     begin_time = flask.session['begin_time']
-    b_hrs, b_mins = begin_time.split(':')
 
     end = arrow.get(flask.session['end_date'])
     end_time = flask.session['end_time']
-    e_hrs, e_mins = end_time.split(':')
 
-    app.logger.debug(begin)
-    app.logger.debug(end)
+    #Call Function that will get all events that overlap the specified time and date range from the specified calendars
+    #returns a list of events with event start, event finish, event summary, event description string
+    allEvents = getEventsFromAllCalendars(gcal_service, calendars, begin, begin_time, end, end_time)
+    
+    #end of create list of strings
+    app.logger.debug("Getting free and busy time blocks with the following events list:")
+    app.logger.debug(allEvents)
 
-    showEvents = []
-
-    # Get all events from the given calendars
-    for calendar in calendars:
-        calendarID = str(calendar)
-        page_token = None
-        # For each day in the given date range on the given calendar (sorted)
-        for day in arrow.Arrow.span_range('day', begin, end):
-            day_start = arrow.get(day[0])
-            day_end = arrow.get(day[1])
-            app.logger.debug(day_start)
-            app.logger.debug(day_end)
-
-            #While there are still more events to get
-            while True:
-                current_begin = day[0].shift(hours=+int(b_hrs), minutes=+int(b_mins))
-                current_end = day[1].replace(hour=int(e_hrs), minute=int(e_mins))
-                app.logger.debug(current_begin)
-                app.logger.debug(current_end)
-                events = gcal_service.events().list(calendarId=calendarID, pageToken=page_token, timeMax=current_end, timeMin=current_begin).execute()
-                
-                #For each event in the list of events
-                for event in events['items']:
-                    app.logger.debug(event['summary'])
-                    eventStart = event['start']
-                    eventFinish = event['end']
-                    app.logger.debug(eventStart)
-                    app.logger.debug(eventFinish)
-                    #Check for transparent events
-                    if 'transparency' in event and event['transparency'] == "transparent":
-                        continue
-                    showEvents.append(event)
-                page_token = events.get('nextPageToken')
-                if not page_token:
-                   break
-    # end of get all events
-
-        #Now create a list of strings with the relevant information
-        finished_events = [ ]
-        for event in showEvents:
-            string = " "
-            #If the event has a start time, it is not an all day event
-            # has key function?????????????????
-            if 'dateTime' in event['start']:
-                start_time = arrow.get(event['start']['dateTime'])
-                start_date = format_arrow_date(start_time)
-                string = str(start_date)
-                start_time = format_arrow_time(start_time)
-                string = string + " " + str(start_time)
-                end_time = arrow.get(event['end']['dateTime'])
-                end_time = format_arrow_time(end_time)
-                string = string + " - " + str(end_time) + ": "
-                string = string + event['summary']
-            #Event is all day, so don't try to parse times
-            else:
-                start_date = arrow.get(event['start']['date'])
-                start_date = format_arrow_date(start_date)
-                string = str(start_date)
-                string = string + " :" + event['summary']
-
-            app.logger.debug(string)
-            finished_events.append(string)
-        #end of create list of strings
-
-    result = finished_events
+    eventList = getBlocks(allEvents, begin, begin_time, end, end_time)
+    #upon return from free blocks, free blocks is a list with 
+    result = []
+    for event in eventList:
+        result.append(event[3])
     return flask.jsonify(result = result)
-
 
 ####
 #
