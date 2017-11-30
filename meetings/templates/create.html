@@ -98,6 +98,7 @@
     </script>
   </form>
 
+  {% if g.calendars is defined %}
   <div class="form-group">
     <label for="owner">Your Full Name:</label>
     <textarea class="form-control" rows="1" id="owner" placeholder="Your Name"></textarea>
@@ -107,6 +108,7 @@
     <label for="invitees">Please Add Full Names of Invitees:</label>
     <textarea class="form-control" rows="5" id="invitees" placeholder="Please Separate Each Full Name with a Comma"></textarea>
   </div>
+  {% endif %}
 
 
     <!--
@@ -197,10 +199,13 @@ function get_Busy_Times(calendar_IDs){
     console.log(availString);
     $.getJSON("/new_Meeting", {events: availString, invitees: names, owner: owner},
     function(data){
-      //Get back boolean if database entry succeeded
-      //change to new page
-      //else
-      //alert
+      result = data.result;
+      if (result) {
+        window.location.replace("/createFinish");
+      }
+      else{
+        alert("Something went wrong while trying to make a new meeting request. Please contact your MeetMe representative.");
+      }
     });
   }
   //The following function is thanks to Michael Berkowski

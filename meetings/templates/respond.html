@@ -24,100 +24,14 @@
      from CDNs instead.
 -->
 
-<script type="text/javascript" src="//cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
-
-<script type="text/javascript" src="//cdn.jsdelivr.net/bootstrap.daterangepicker/2/daterangepicker.js"></script>
-<link rel="stylesheet" type="text/css" href="//cdn.jsdelivr.net/bootstrap.daterangepicker/2/daterangepicker.css" />
-
-
 </head>
 
 <body>
 <div class="container">
-<h6 align="right">MeetMe</h6><br>
-<h1>New Meeting Request</h1><br>
-
-
-
-
-    <!--
-    Show the calendar list (if we have it).  This will need to be turned into
-    a form from which calendars can be picked. Up to three entries are
-    shown in each row (but the order is across then down; I would
-    prefer down then across). 
-
-
-    turn the below code into a set of objects with a check box
-    then if the check box is clicked, call get_busy_events with that calendar???
-    or do you wait until all the check boxes are clicked and then add that calendar name
-    to the list of calendars to be checked for busy events?
-    hmmm
-    -->
-
-  
-{% if g.calendars is defined  %}
-  <div class="row">
-  {% for cal in g.calendars if cal.selected %}
-          <div class="col-md-4">
-            <input id="{{ cal.id }}" name="calendar_checkbox" type="checkbox">
-      {{ cal.summary }}
-          
-          </div>
-         {% if loop.index is divisibleby 1 %}
-          </div> <div class="row">
-         {% endif %}
-  {% endfor %}
-  </div><br>
-  <button type="submit" id="show_busy" name = "show busy">Show Busy Times</button>
-{% endif %}
-<div id="calendar_events">
-
-</div>
+fuoooooooonodsanfodnfojdsaodsbfodsb
 
 <script type="text/javascript">
 
-$("#show_busy").click( function(){
-            $("#calendar_events").empty();
-             var checkedBoxed = getCheckedBoxed("calendar_checkbox");
-             console.log("The checked boxes are " + checkedBoxed);
-             get_Busy_Times(checkedBoxed);
-             }
-);
-
-function get_Busy_Times(calendar_IDs){
-              console.log("I'm sending a request for get busy times");
-              console.log("This is calendar IDS: " + calendar_IDs);
-              var jsonString = JSON.stringify(calendar_IDs);
-              $.getJSON( "/get_busy_times", { calendarIDs: jsonString }, 
-              function(data) {
-                var events = data.result;
-                console.log(events);
-                $("#calendar_events").append("<h5> Avoiding conflicts with: </h5>");
-                console.log("I'm back from a request for get busy times");
-                for (i = 0; i < events.length; i++) {
-                  var eventString = events[i];
-                  $("#calendar_events").append("<br>" + eventString);
-                }
-              });
-
-}
-  //The following function is thanks to Michael Berkowski
-  //https://stackoverflow.com/questions/8563240/how-to-get-all-checked-checkboxes
-  function getCheckedBoxed(inputName){
-
-    //Get all the inputs
-    var checkBoxes = document.getElementsByName(inputName);
-    var checked_ = [ ];
-    for (var i = 0; i < checkBoxes.length; i++) {
-      //If the ith box is checked, add it to the array
-      if (checkBoxes[i].checked) {
-        checked_.push(checkBoxes[i].id);
-      }
-    }
-    //Return null if list is empty, return list otherwise
-    return checked_.length > 0 ? checked_ : null;
-  }
-  //End Borrowed Function
 </script>
 
   </div>  <!-- container (for bootstrap) -->

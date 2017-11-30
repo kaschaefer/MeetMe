@@ -159,23 +159,24 @@ def get_busy_times():
 @app.route('/new_Meeting')
 def new_Meeting():
     app.logger.debug("I'm making a new entry in the database")
-    #Make a new memo
+    
     eventString = request.args.get('events')
-    print(eventString)
     eventList = json.loads(eventString)
-    print(eventList)
-    names = request.args.get('invitees')
     owner = request.args.get('owner')
+    names = request.args.get('invitees')
+    
     names.strip()
-    names.split(',')
-    app.logger.debug("I'm calling add_new_meeting")
-    add_new_meeting(eventList, names, owner)
-    return
+    names = names.split(',')
+
+    newMeeetingInfo = add_new_meeting(eventList, names, owner)
+    reslt = newMeeetingInfo["result"]
+    flask.session['new_meeting_id'] = newMeeetingInfo["id"]
+
+    return flask.jsonify(result = reslt)
 
 def add_new_meeting(eventList, invitees, owner):
     app.logger.debug("I'm in add_new_meeting")
     already_responded = []
-    already_responded.append(owner)
     record = { "owner": owner,
         "invitees": invitees,
         "already_responded": already_responded,
@@ -192,7 +193,7 @@ def add_new_meeting(eventList, invitees, owner):
         _id = "0"
         rslt = False
     app.logger.debug("I'm returning from add_new_meeting")
-    return
+    return {"result": rslt, "id": _id}
 ####
 #
 #  Google calendar authorization:

@@ -24,12 +24,6 @@
      from CDNs instead.
 -->
 
-<script type="text/javascript" src="//cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
-
-<script type="text/javascript" src="//cdn.jsdelivr.net/bootstrap.daterangepicker/2/daterangepicker.js"></script>
-<link rel="stylesheet" type="text/css" href="//cdn.jsdelivr.net/bootstrap.daterangepicker/2/daterangepicker.css" />
-
-
 </head>
 
 <body>
@@ -47,12 +41,14 @@
   </div>
 </div>
 
-<!-- 
-  TODO:
-  If button.id new is clicked, go to create.html
-  if button.id existing is clicked, go to create.html
-
--->
+<script type="text/javascript">
+  document.getElementById("new").addEventListener("click", function(){
+    window.location.assign("/create");
+  });
+  document.getElementById("existing").addEventListener("click", function(){
+    window.location.assign("/find");
+  }); 
+</script>
 
 
 </body>  </div>  <!-- container (for bootstrap) -->
