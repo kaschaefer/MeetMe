@@ -129,7 +129,7 @@
          {% endif %}
   {% endfor %}
   </div><br>
-  <button type="submit" id="show_busy" name = "show busy">Show Busy Times</button>
+  <button type="submit" id="show_busy" name = "show busy">Show My Available Meeting Times</button>
 {% endif %}
 <div id="calendar_events">
 
@@ -153,15 +153,36 @@ function get_Busy_Times(calendar_IDs){
               function(data) {
                 var events = data.result;
                 console.log(events);
-                $("#calendar_events").append("<h5> Avoiding conflicts with: </h5>");
+                $("#calendar_events").append("<h5> Your Schedule For the Given Time Range: </h5>");
                 console.log("I'm back from a request for get busy times");
                 for (i = 0; i < events.length; i++) {
-                  var eventString = events[i];
-                  $("#calendar_events").append("<br>" + eventString);
+                  $("#calendar_events").append("<br>" + events[i][3] + " " + events[i][4] + events[i][2]);
                 }
+                //Create Button for finalize time and add it to the page
+                $("#calendar_events").append("<br><br>");
+                var button = document.createElement("button");
+                button.innerHTML = "Finalize Free Times";
+                var parent = document.getElementById("calendar_events");
+                parent.appendChild(button);
+                button.addEventListener ("click", function() {
+                  makeNewDatabaseEntry(events);
+                });
               });
 
 }
+
+  function makeNewDatabaseEntry(eventList){
+    // I only want to make a new database entry with the available free times
+    //I don't want to keep the events at all... are they secure?
+    var availableBlocks = []
+    var len = eventList.length;
+    for (i=0; i < len; i++) {
+      if (eventList[i][2] == 'Available'){
+        availableBlocks.push(eventList[i]);
+      }
+    }
+    console.log(availableBlocks);
+  }
   //The following function is thanks to Michael Berkowski
   //https://stackoverflow.com/questions/8563240/how-to-get-all-checked-checkboxes
   function getCheckedBoxed(inputName){

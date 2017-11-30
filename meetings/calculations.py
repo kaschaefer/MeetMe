@@ -36,57 +36,35 @@ def getEventsFromAllCalendars(gcal_service, calendars, begin, begin_time, end, e
                 page_token = events.get('nextPageToken')
                 if not page_token:
                    break
+    #end get all events from given calendars
     
+    #get individual event details
     finished_events = [ ]
     for event in showEvents:
         eventDetails = []
-        string = " "
         #If the event has a start time, it is not an all day event
-        #String holds a String representation of what the event's detais are (for displaying)
-        #Start date is either a date with no start time
-        #or start date is a DateTime object
         if 'dateTime' in event['start']:
             start_time = arrow.get(event['start']['dateTime'])
-            string = str(beautify_date(start_time))
-            string = string + " " + str(beautify_time(start_time))
             end_time = arrow.get(event['end']['dateTime'])
-            string = string + " - " + str(beautify_time(end_time)) + ": "
-            string = string + event['summary']
         #Event is all day, so don't try to parse times
         else:
             start_time = arrow.get(event['start']['date'])
             start_time = start_time.replace(tzinfo='US/Pacific', hour=int(b_hrs), minute=int(b_mins))
             end_time = start_time.replace(hour=int(e_hrs), minute=int(e_mins))
-            string = str(beautify_date(start_time))
-            string = string + " :" + event['summary']
         #end if/else statement
-        #create a list of event summaries and their start date
-        eventDetails = [start_time, end_time, event['summary'], string]
-        finished_events.append(eventDetails)
-    #end for loop
-
-    #the events are already sorted by time, so I need to sort them by date
-    #finished_events.sort(key=lambda i: i[1])
-
-    #now create a new list with just the strings
-    #fin_events = [ ]
-    #for event in finished_events:
-    #    fin_events.append(event[0])
-
-    #return a list of strings that includes the event date, start and end times, and summary       
+        #create a list of event summaries and their start/end times
+        eventDetails = [start_time, end_time, event['summary']]
+        finished_events.append(eventDetails)     
+    #endfor
 
     return finished_events
 
 def getBlocks(eventList, beginDate, beginTime, endDate, endTime):
-    #Get hours and minutes of begin and end time for later use
     b_hrs, b_mins = beginTime.split(':')
     e_hrs, e_mins = endTime.split(':')
 
     #sort the list of events by start time
     sortedEvents = sorted(eventList, key=lambda k: k[0])
-    print("The sorted events are: ")
-    for thing in sortedEvents:
-        print(thing)
 
     #create an empty list to store the blocks in
     already_processed = [ ]
@@ -114,23 +92,123 @@ def getBlocks(eventList, beginDate, beginTime, endDate, endTime):
                                 current_block[0] = time_block[0]
                                 joined = True
                         #if time block start time is earlier than current block start
-                        # AND time block end is later than current block end
                         elif time_block[0] < current_block[0]:
+                            # AND time block end is later than current block end
                             if time_block[1] > current_block[1]:
                                 current_block[0] = time_block[0]
                                 current_block[1] = time_block[1]
                                 joined = True
                     
-                #endfor
+                #endfor current_block
                 if not joined:
                     already_processed.append(time_block)
+        #endfor time_block
+    #endfor day in range
 
+    #get free blocks from the list of 
+    free_times = []
+    index = 0
+    for day in arrow.Arrow.span_range('day', beginDate, endDate):
+        begin_time = day[0].shift(hours=+int(b_hrs), minutes=+int(b_mins))
+        end_time = day[1].replace(hour=int(e_hrs), minute=int(e_mins))
+        block_begin = begin_time
+        block_end = end_time
+        handled = False
+        while index < len(already_processed):
+            #if the current block's begin time is before or at the end time of the day
+            #then it is an event in this day
+            if already_processed[index][0] <= end_time:
+                #if the current block's end time is before the end of the day
+                #then there might be another block
+                if already_processed[index][1] < end_time:
+                    free_block = [block_begin, already_processed[index][0], "Available"]
+                    free_times.append(free_block)
+                    block_begin = already_processed[index][1]
+                    index += 1
+                    handled = True
+                else:
+                    if already_processed[index][0] < begin_time:
+                        index += 1
+                        handled = True
+                        continue
+                    #the end time is after the end of the day range, we've reached the end of the day
+                    free_block = [block_begin, already_processed[index][0], "Available"]
+                    free_times.append(free_block)
+                    index += 1
+                    handled = True
+                    break
+            else:
+                free_block = [block_begin, block_end, "Available"]
+                free_times.append(free_block)
+                handled = True
+                break
+        #endwhile
+        #If I got to the end of a day and didn't handle that day in some way shape or form
+        #it's a free day
+        if handled == False:
+            free_block = [block_begin, block_end]
+            free_times.append(free_block)
     #endfor
-    print("Free Blocks is exiting")
-    for thing in already_processed:
-        print(thing)
-    print(already_processed)
-    return
+
+        #remove any free blocks that are shorter than specified meeting duration
+        #duration is in minutes
+    duration = 1
+    free_times = crop(free_times, duration)
+
+    #concatenate the two lists
+    finishedBlocks =[ ]
+    index = 0
+    for freeBlock in free_times:
+        handled = False
+        while index < len(sortedEvents):
+            #if a busy block ends after free block begins
+            #then the busy block is after the free block
+            if sortedEvents[index][1] > freeBlock[0]:
+                finishedBlocks.append(freeBlock)
+                handled = True
+                break
+            else:
+                finishedBlocks.append(sortedEvents[index])
+                index += 1
+        #endwhile
+        if handled == False:
+            finishedBlocks.append(free_block)
+    for busyBlock in sortedEvents:
+        if busyBlock not in finishedBlocks:
+            finishedBlocks.append(busyBlock)
+            
+    # Wow, we're finally done
+    return finishedBlocks
+
+
+def getPertinentInfo(eventList):
+#Take a list of free and busy times and deconstruct them into their pertinent information for displaying on the web application
+    #current format of event in eventList = start_dateTime, end_dateTime, summary
+    #I want: event in eventList = start_dateTime, end_dateTime, summary, date, string that says start time to end time in humanized format
+    for event in eventList:
+        #get start_dateTime, turn it into date, append to event
+        date = beautify_date(event[0])
+        event.append(date)
+        #beautify the begin time of the time block
+        prettyBeginTime = beautify_time(event[0])
+        prettyEndTime = beautify_time(event[1])
+        string = str(prettyBeginTime) + " - " + str(prettyEndTime) + ": "
+        event.append(string)
+        event[0] = event[0].isoformat()
+        event[1] = event[1].isoformat()
+    for event in eventList:
+        print(event)
+    return eventList
+
+#I got the psuedocode for this function from Sam Champer because he's awesome
+#he knows that i used the function
+#he's ok with it
+def crop(listOfTimes, minTime):
+    newList = []
+    for block in listOfTimes:
+        if block[0].shift(minutes=+minTime) <= block[1]:
+            newList.append(block)
+    return newList
 
 def beautify_date(date):
     try: 

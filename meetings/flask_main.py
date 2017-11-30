@@ -10,6 +10,7 @@ import logging
 import calculations
 from calculations import getEventsFromAllCalendars
 from calculations import getBlocks
+from calculations import getPertinentInfo
 
 # Date handling 
 import arrow # Replacement for datetime, based on moment.js
@@ -89,9 +90,6 @@ def choose():
     flask.g.calendars = list_calendars(gcal_service)
     return render_template('create.html')
 
-
-
-
 @app.route('/get_busy_times')
 def get_busy_times():
     app.logger.debug("Entering get busy times")
@@ -120,11 +118,18 @@ def get_busy_times():
     app.logger.debug(allEvents)
 
     eventList = getBlocks(allEvents, begin, begin_time, end, end_time)
-    #upon return from free blocks, free blocks is a list with 
-    result = []
-    for event in eventList:
-        result.append(event[3])
+    #upon return from getBlocks, eventList is a list of our free/busy times for the given day/time range
+    #turn the arrow objects into ISO strings before sending the information to the server
+
+    result = getPertinentInfo(eventList)
+        #what do i want
+        # i want the date, i want the beginning and end time
+    
     return flask.jsonify(result = result)
+
+@app.route('/new_Meeting')
+def new_Meeting():
+    
 
 ####
 #
