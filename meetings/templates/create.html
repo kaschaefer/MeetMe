@@ -53,7 +53,7 @@
   {% endif %}
 {% endwith %}
 
-<h2>Date Range for Meeting</h2>
+<h4>Date Range for Meeting</h4>
   <form action="/setrange" method="post">
   <input type="text" name="daterange" size="12"
     {% if session.daterange is defined %}
@@ -62,8 +62,8 @@
      class="pull-down"
      style="background: #fff; cursor: pointer; padding: 5px 10px;
      border: 1px solid #ccc; width: 12em" >
-     <br>
-<h2>Time Range for Meeting</h2>
+     <br><br>
+<h4>Time Range for Meeting</h4>
   <p> From: <input type=time name="begin_time" id="begin_time" 
     {% if session.daterange is defined %}
       value="{{session.begin_time}}"
@@ -97,8 +97,16 @@
           });
     </script>
   </form>
-  
 
+  <div class="form-group">
+    <label for="owner">Your Full Name:</label>
+    <textarea class="form-control" rows="1" id="owner" placeholder="Your Name"></textarea>
+  </div>
+  
+  <div class="form-group">
+    <label for="invitees">Please Add Full Names of Invitees:</label>
+    <textarea class="form-control" rows="5" id="invitees" placeholder="Please Separate Each Full Name with a Comma"></textarea>
+  </div>
 
 
     <!--
@@ -165,13 +173,15 @@ function get_Busy_Times(calendar_IDs){
                 var parent = document.getElementById("calendar_events");
                 parent.appendChild(button);
                 button.addEventListener ("click", function() {
-                  makeNewDatabaseEntry(events);
+                  var owner = $("#owner").val();
+                  var names = $("#invitees").val();
+                  makeNewDatabaseEntry(events, names, owner);
                 });
               });
 
 }
 
-  function makeNewDatabaseEntry(eventList){
+  function makeNewDatabaseEntry(eventList, names, owner){
     // I only want to make a new database entry with the available free times
     //I don't want to keep the events at all... are they secure?
     var availableBlocks = []
@@ -181,7 +191,17 @@ function get_Busy_Times(calendar_IDs){
         availableBlocks.push(eventList[i]);
       }
     }
+    console.log("Available blocks is ");
     console.log(availableBlocks);
+    var availString = JSON.stringify(availableBlocks);
+    console.log(availString);
+    $.getJSON("/new_Meeting", {events: availString, invitees: names, owner: owner},
+    function(data){
+      //Get back boolean if database entry succeeded
+      //change to new page
+      //else
+      //alert
+    });
   }
   //The following function is thanks to Michael Berkowski
   //https://stackoverflow.com/questions/8563240/how-to-get-all-checked-checkboxes

@@ -3,6 +3,10 @@ from flask import render_template
 from flask import request
 from flask import url_for
 import uuid
+import bson
+from bson.objectid import ObjectId
+import sys
+from pymongo import MongoClient
 
 import json
 import logging
@@ -25,6 +29,9 @@ import httplib2   # used in oauth2 flow
 # Google API for services 
 from apiclient import discovery
 
+
+
+
 ###
 # Globals
 ###
@@ -34,6 +41,14 @@ if __name__ == "__main__":
 else:
     CONFIG = config.configuration(proxied=True)
 
+#Database SetUp
+MONGO_CLIENT_URL = "mongodb://{}:{}@{}:{}/{}".format(
+    CONFIG.DB_USER,
+    CONFIG.DB_USER_PW,
+    CONFIG.DB_HOST, 
+    CONFIG.DB_PORT, 
+    CONFIG.DB)
+
 app = flask.Flask(__name__)
 app.debug=CONFIG.DEBUG
 app.logger.setLevel(logging.DEBUG)
@@ -42,6 +57,20 @@ app.secret_key=CONFIG.SECRET_KEY
 SCOPES = 'https://www.googleapis.com/auth/calendar.readonly'
 CLIENT_SECRET_FILE = CONFIG.GOOGLE_KEY_FILE  ## You'll need this
 APPLICATION_NAME = 'MeetMe class project'
+
+####
+# Database connection per server process
+###
+
+try: 
+    dbclient = MongoClient(MONGO_CLIENT_URL)
+    db = getattr(dbclient, str(CONFIG.DB))
+    collection = db.MeetMe
+
+except:
+    print("Failure opening database.  Is Mongo running? Correct password?")
+    sys.exit(1)
+
 
 #############################
 #
@@ -129,8 +158,41 @@ def get_busy_times():
 
 @app.route('/new_Meeting')
 def new_Meeting():
-    
+    app.logger.debug("I'm making a new entry in the database")
+    #Make a new memo
+    eventString = request.args.get('events')
+    print(eventString)
+    eventList = json.loads(eventString)
+    print(eventList)
+    names = request.args.get('invitees')
+    owner = request.args.get('owner')
+    names.strip()
+    names.split(',')
+    app.logger.debug("I'm calling add_new_meeting")
+    add_new_meeting(eventList, names, owner)
+    return
 
+def add_new_meeting(eventList, invitees, owner):
+    app.logger.debug("I'm in add_new_meeting")
+    already_responded = []
+    already_responded.append(owner)
+    record = { "owner": owner,
+        "invitees": invitees,
+        "already_responded": already_responded,
+        "available_times": eventList
+    }
+    print(record)
+    try:
+        inserted = collection.insert_one(record)
+        _id = str(inserted.inserted_id)
+        print(_id)
+        rslt = True
+    except:
+        app.logger.debug("Insertion of memo failed")
+        _id = "0"
+        rslt = False
+    app.logger.debug("I'm returning from add_new_meeting")
+    return
 ####
 #
 #  Google calendar authorization:
