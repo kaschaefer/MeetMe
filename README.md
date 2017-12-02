@@ -20,9 +20,13 @@ The application, on the whole, works as expected. A meeting "owner" is able to s
 
 #### What Doesn't
 *The application does not generate a "final" meeting time email, similar to the invitiation email that is generated when you make a new meeting request. 
+
 *Meeting invitees are not made aware of the date/time range that the meeting will be in until they select their calendars, which I think is poor UI
+
 *The application does not handle the case where there are no available meeting times
+
 *The code is pretty repetitive at times, the result of a project done at the last minute
+
 *There are no automated tests :(
 
 ### Next Version
