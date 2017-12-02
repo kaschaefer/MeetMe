@@ -24,10 +24,6 @@
      from CDNs instead.
 -->
 
-<script type="text/javascript" src="//cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
-
-<script type="text/javascript" src="//cdn.jsdelivr.net/bootstrap.daterangepicker/2/daterangepicker.js"></script>
-<link rel="stylesheet" type="text/css" href="//cdn.jsdelivr.net/bootstrap.daterangepicker/2/daterangepicker.css" />
 
 
 </head>
@@ -37,7 +33,7 @@
 <h6 align="right">MeetMe</h6><br>
 
 
-{% if session.slackers is defined %}
+{% if session.slackers is defined and session.meetingFinished is not defined %}
 <h2>Welcome Back!</h2>
 <br><br><br>
 <p> Unfortunately, we have not heard back yet from the following people:</p>
@@ -55,7 +51,6 @@
 <div class="row">
   {% for event in session.freeTimes %}
     <div class="col-md-4">
-      <input id="{{ event[3] }} {{event[4]}}" name="event_checkbox" type="checkbox">
       {{ event[3] }} {{event[4]}}
     </div>
     {% if loop.index is divisibleby 1 %}
@@ -67,8 +62,6 @@
 
 {% endif %}
 
-
-</script>
 
   </div>  <!-- container (for bootstrap) -->
   </body> </html>

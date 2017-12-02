@@ -92,7 +92,6 @@ def createFinish():
 def find():
     return render_template('find.html')
 
-
 @app.route("/respond")
 def respond():
     app.logger.debug("Checking credentials for Google calendar access")
@@ -161,7 +160,8 @@ def update_Meeting():
     updatedResponded = theMeetingTimes["already_responded"]
     updatedResponded.append(userName)
     collection.find_one_and_update({"_id": ObjectId(meetingID)}, { '$set': {"available_times": finalList, "already_responded": updatedResponded}})
-    return      
+    
+    return flask.jsonify(result = userName)    
             
 
 
@@ -606,7 +606,6 @@ def list_calendars(service):
         # Optional binary attributes with False as default
         selected = ("selected" in cal) and cal["selected"]
         primary = ("primary" in cal) and cal["primary"]
-        
 
         result.append(
           { "kind": kind,
