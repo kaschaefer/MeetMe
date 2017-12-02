@@ -27,13 +27,22 @@ The application, on the whole, works as expected. A meeting "owner" is able to s
 
 ### Next Version
 The next version of the application would fix the above problems as follows:
+
 *Application would generate an email to send to invitees with finalized date and time
+
 *A meeting owner would be able to choose a meeting duration and only see available times for at least that duration. The application already has the functionality to implement this in the crop function (I just didn't have time)
+
 *The date and time range chosen by the meeting owner would be displayed on the page when another user is responding to that meeting request
+
 *The code would be cleaner (Sorry!) with repetitive logic factored into classes and functions
+
 *The application would notify the meeting owner if there were no available times left in the database entry so that the owner could either change the date/time range or make a new request
+
 *Automated tests using nose
+
 *Would also fix these known bugs:
-####Known Bugs
+
+##### Known Bugs
 *There is a timezone issue, such that if you try to schedule a meeting in a range that extends past 6pm, the application breaks. However, the application works for all times from 12:00am to 5:59pm.
+
 *If a user *only* has transparent events in their calendar and no other events, the event list for that user is empty and the application breaks. A very simple fix, but one I simply did not have time to implement.
