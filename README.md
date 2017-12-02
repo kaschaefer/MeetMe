@@ -23,6 +23,7 @@ The application, on the whole, works as expected. A meeting "owner" is able to s
 *Meeting invitees are not made aware of the date/time range that the meeting will be in until they select their calendars, which I think is poor UI
 *The application does not handle the case where there are no available meeting times
 *The code is pretty repetitive at times, the result of a project done at the last minute
+*There are no automated tests :(
 
 ### Next Version
 The next version of the application would fix the above problems as follows:
@@ -31,6 +32,7 @@ The next version of the application would fix the above problems as follows:
 *The date and time range chosen by the meeting owner would be displayed on the page when another user is responding to that meeting request
 *The code would be cleaner (Sorry!) with repetitive logic factored into classes and functions
 *The application would notify the meeting owner if there were no available times left in the database entry so that the owner could either change the date/time range or make a new request
+*Automated tests using nose
 *Would also fix these known bugs:
 ####Known Bugs
 *There is a timezone issue, such that if you try to schedule a meeting in a range that extends past 6pm, the application breaks. However, the application works for all times from 12:00am to 5:59pm.
