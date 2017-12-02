@@ -3,9 +3,13 @@ Authors: Michal Young, Mikaela Schaefer
 
 Contact: kaelas@uoregon.edu
 
+
+
 ## Description
 This program runs a Python/Flask server that controls authentication and queries for a web application that interacts with 
 the Google Calendar API. Somebody proposes a meeting and specifies date and time ranges.  The application helps prepare an invitation, which is sent out to other attendees.  Each attendee responds with their availability for the meeting.  For both the meeting proposer and the attendees, the application draws information from selected Google calendars to narrow the potential times down to times that do not conflict with existing non-transparent (that is, busy) events. To be able to use this application, you will need to download and host your own version.
+### NOTE FOR GRADER
+If a user is the owner of a meeting, they need to check on the status of their meeting by choosing the "respond to existing meeting request" option on the homepage of the application.
 
 ### Design Choices
 #### Privacy
@@ -23,6 +27,8 @@ The application, on the whole, works as expected. A meeting "owner" is able to s
 
 *Meeting invitees are not made aware of the date/time range that the meeting will be in until they select their calendars, which I think is poor UI
 
+*The UI for an owner checking on their meeting needs work. I did not do a good enough job of explaining to the user that they need to check on their meeting themselves.
+
 *The application does not handle the case where there are no available meeting times
 
 *The code is pretty repetitive at times, the result of a project done at the last minute
@@ -37,6 +43,8 @@ The next version of the application would fix the above problems as follows:
 *A meeting owner would be able to choose a meeting duration and only see available times for at least that duration. The application already has the functionality to implement this in the crop function (I just didn't have time)
 
 *The date and time range chosen by the meeting owner would be displayed on the page when another user is responding to that meeting request
+
+*Send an email to the owner of a meeting when everyone who was invited has responded.
 
 *The code would be cleaner (Sorry!) with repetitive logic factored into classes and functions
 
