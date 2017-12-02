@@ -197,7 +197,7 @@ function get_Busy_Times(calendar_IDs){
     console.log(availableBlocks);
     var availString = JSON.stringify(availableBlocks);
     console.log(availString);
-    $.getJSON("/new_Meeting", {events: availString, invitees: names, owner: owner},
+    $.getJSON("/new_Meeting", {events: availString, invitees: names, owner: owner, },
     function(data){
       result = data.result;
       if (result) {

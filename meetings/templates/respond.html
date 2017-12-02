@@ -1,6 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
 <html lang="en"> <head>
-<title>Respond to</title>
+<title>Create New Meeting Request</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <link rel="stylesheet" type="text/css"
@@ -24,14 +24,136 @@
      from CDNs instead.
 -->
 
+<script type="text/javascript" src="//cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+
+<script type="text/javascript" src="//cdn.jsdelivr.net/bootstrap.daterangepicker/2/daterangepicker.js"></script>
+<link rel="stylesheet" type="text/css" href="//cdn.jsdelivr.net/bootstrap.daterangepicker/2/daterangepicker.css" />
+
+
 </head>
 
 <body>
 <div class="container">
-fuoooooooonodsanfodnfojdsaodsbfodsb
+<h6 align="right">MeetMe</h6><br>
+
+{% if g.calendars is defined %}
+<h2>Please choose which calendars you would like to consider</h2><br>
+
+<!--
+  -- If there are any warnings or other messages from a prior action,
+  -- they appear above the rest of the content, just until the next 
+  -- action.
+  -->
+
+
+    <!--
+    Show the calendar list (if we have it).  This will need to be turned into
+    a form from which calendars can be picked. Up to three entries are
+    shown in each row (but the order is across then down; I would
+    prefer down then across). 
+
+
+    turn the below code into a set of objects with a check box
+    then if the check box is clicked, call get_busy_events with that calendar???
+    or do you wait until all the check boxes are clicked and then add that calendar name
+    to the list of calendars to be checked for busy events?
+    hmmm
+    -->
+
+  
+  <div class="row">
+  {% for cal in g.calendars if cal.selected %}
+          <div class="col-md-4">
+            <input id="{{ cal.id }}" name="calendar_checkbox" type="checkbox">
+      {{ cal.summary }}
+          
+          </div>
+         {% if loop.index is divisibleby 1 %}
+          </div> <div class="row">
+         {% endif %}
+  {% endfor %}
+  </div><br>
+  <button type="submit" id="show_busy" name = "show busy">Show My Available Meeting Times</button>
+{% endif %}
+<div id="calendar_events">
+
+</div>
 
 <script type="text/javascript">
 
+$("#show_busy").click( function(){
+            $("#calendar_events").empty();
+             var checkedBoxed = getCheckedBoxed("calendar_checkbox");
+             console.log("The checked boxes are " + checkedBoxed);
+             get_Busy_Times(checkedBoxed);
+             }
+);
+
+function get_Busy_Times(calendar_IDs){
+              console.log("I'm sending a request for get busy times");
+              console.log("This is calendar IDS: " + calendar_IDs);
+              var jsonString = JSON.stringify(calendar_IDs);
+              $.getJSON( "/get_busy_times", { calendarIDs: jsonString }, 
+              function(data) {
+                var events = data.result;
+                console.log(events);
+                $("#calendar_events").append("<h5> Your Schedule For the Given Time Range: </h5>");
+                console.log("I'm back from a request for get busy times");
+                for (i = 0; i < events.length; i++) {
+                  $("#calendar_events").append("<br>" + events[i][3] + " " + events[i][4] + events[i][2]);
+                }
+                //Create Button for finalize time and add it to the page
+                $("#calendar_events").append("<br><br>");
+                var button = document.createElement("button");
+                button.innerHTML = "Finalize Free Times";
+                var parent = document.getElementById("calendar_events");
+                parent.appendChild(button);
+                button.addEventListener ("click", function() {
+                  var owner = $("#owner").val();
+                  var names = $("#invitees").val();
+                  updateEntry(events);
+                });
+              });
+
+}
+
+  function updateEntry(eventList, names, owner){
+    // I only want to make a new database entry with the available free times
+    //I don't want to keep the events at all... are they secure?
+    console.log("I am about to update an database entry with new free times")
+    var availableBlocks = []
+    var len = eventList.length;
+    for (i=0; i < len; i++) {
+      if (eventList[i][2] == 'Available'){
+        availableBlocks.push(eventList[i]);
+      }
+    }
+    console.log("Available blocks is ");
+    console.log(availableBlocks);
+    var availString = JSON.stringify(availableBlocks);
+    console.log(availString);
+    $.getJSON("/update_Meeting", {events: availString},
+    function(data){
+      
+    });
+  }
+  //The following function is thanks to Michael Berkowski
+  //https://stackoverflow.com/questions/8563240/how-to-get-all-checked-checkboxes
+  function getCheckedBoxed(inputName){
+
+    //Get all the inputs
+    var checkBoxes = document.getElementsByName(inputName);
+    var checked_ = [ ];
+    for (var i = 0; i < checkBoxes.length; i++) {
+      //If the ith box is checked, add it to the array
+      if (checkBoxes[i].checked) {
+        checked_.push(checkBoxes[i].id);
+      }
+    }
+    //Return null if list is empty, return list otherwise
+    return checked_.length > 0 ? checked_ : null;
+  }
+  //End Borrowed Function
 </script>
 
   </div>  <!-- container (for bootstrap) -->

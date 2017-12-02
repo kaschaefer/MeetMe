@@ -7,7 +7,7 @@ def getEventsFromAllCalendars(gcal_service, calendars, begin, begin_time, end, e
     b_hrs, b_mins = begin_time.split(':')
     e_hrs, e_mins = end_time.split(':')
     showEvents = []
-
+    print("I'm getting events")
     # Get all events from the given calendars
     for calendar in calendars:
         calendarID = str(calendar)
@@ -24,7 +24,7 @@ def getEventsFromAllCalendars(gcal_service, calendars, begin, begin_time, end, e
                 current_begin = day[0].shift(hours=+int(b_hrs), minutes=+int(b_mins))
                 current_end = day[1].replace(hour=int(e_hrs), minute=int(e_mins))
                 events = gcal_service.events().list(calendarId=calendarID, pageToken=page_token, timeMax=current_end, timeMin=current_begin).execute()
-                
+                print(events)
                 #For each event in the list of events
                 for event in events['items']:
                     eventStart = event['start']
@@ -37,7 +37,8 @@ def getEventsFromAllCalendars(gcal_service, calendars, begin, begin_time, end, e
                 if not page_token:
                    break
     #end get all events from given calendars
-    
+    for event in showEvents:
+        print(event)
     #get individual event details
     finished_events = [ ]
     for event in showEvents:
@@ -145,8 +146,8 @@ def getBlocks(eventList, beginDate, beginTime, endDate, endTime):
         #endwhile
         #If I got to the end of a day and didn't handle that day in some way shape or form
         #it's a free day
-        if handled == False:
-            free_block = [block_begin, block_end]
+        if handled == False or ( index == len(already_processed) and already_processed[index-1][1] < block_end):
+            free_block = [block_begin, block_end, "Available"]
             free_times.append(free_block)
     #endfor
 
@@ -199,6 +200,74 @@ def getPertinentInfo(eventList):
     for event in eventList:
         print(event)
     return eventList
+
+
+def concatFreeTimes(currentFreeTimes, userFreeTimes, begin_date, end_date):
+    """
+    This function takes two lists of free times and combines them
+    Then crops out any resulting free times that are less than a minute long
+    Then formats the list to ready it for insertion into the database
+    """
+    updatedFreeTimes = []
+    index = 0
+
+    #for each day in the range of days
+    begin_date = arrow.get(begin_date)
+    end_date = arrow.get(end_date)
+
+    for day in arrow.Arrow.span_range('day', begin_date, end_date):
+        day_start = day[0]
+        day_end = day[1]
+        for currBlock in currentFreeTimes:
+            if arrow.get(currBlock[0]) >= day_start and arrow.get(currBlock[1]) <= day_end:
+                handled = False
+                for userBlock in userFreeTimes:
+
+                    #if userBlock is in the day we're looking at
+                    if arrow.get(userBlock[0]) >= day_start and arrow.get(userBlock[1]) <= day_end:
+                        block_begin = str(day_start)
+                        block_end = str(day_end)
+                        # If the user's begin time is later than the current begin time
+                        if userBlock[0] >= currBlock[0]:
+                            block_begin = userBlock[0]
+                            #If the user's end time is earlier than the current end time
+                            if userBlock[1] <= currBlock[1]:
+                                block_end = userBlock[1]
+                            else:
+                                block_end = currBlock[1]
+                            handled = True
+
+                        # The user's begin time is earlier than the current begin time
+                        elif userBlock[0] < currBlock[0]:
+                            block_begin = currBlock[0]
+                            #If the user's end time is earlier than the current end time
+                            if userBlock[1] <= currBlock[1]:
+                                block_end = userBlock[1]
+                                handled = True
+                            else:
+                                block_end = currBlock[1]
+                            
+                        #I've gotten this far, so I must have found a new meeting time
+                        if handled:
+                            newBlock = [arrow.get(block_begin), arrow.get(block_end), "Available"]
+                            updatedFreeTimes.append(newBlock)
+                            handled = False
+                    #endif
+                #end forloop
+            #endif
+        #endfor
+    #endfor
+
+    updatedFreeTimes = crop(updatedFreeTimes, 1)
+    updatedFreeTimes = getPertinentInfo(updatedFreeTimes)
+    for event in updatedFreeTimes:
+        print(event)
+    return updatedFreeTimes
+        
+
+
+
+
 
 #I got the psuedocode for this function from Sam Champer because he's awesome
 #he knows that i used the function

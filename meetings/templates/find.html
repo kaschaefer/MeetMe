@@ -45,6 +45,15 @@
 
 <h6 align="right">MeetMe</h6><br>
 
+{% with messages = get_flashed_messages() %}
+{% if messages %}
+  <ul class=flashes>
+  {% for message in messages %}
+    <li>{{ message }}</li>
+  {% endfor %}
+  </ul>
+{% endif %}
+{% endwith %}
 
 <form action="/get_data" method="post">
     <!--
@@ -53,14 +62,14 @@
     -->
     <div class="form-group">
         <label for="meetingID">Meeting ID:</label>
-        <input type="string" id="meetingId" class="form-control" placeholder="MeetingID" aria-describedby="meetingIDHelpBlock">
+        <input type="string" id="meetingID" name="meetingID" class="form-control" placeholder="MeetingID" aria-describedby="meetingIDHelpBlock">
         <p id="meetingIDHelpBlock" class="form-text text-muted">
             Your Meeting ID was included in the email you received from your meeting planner. If you are having issues, please double check that you have the correct Meeting ID.
         </p>
     </div>
     <div class="form-group">
         <label for="fullname">Name</label>
-        <input type="name" class="form-control" id="fullName" placeholder="Full Name" aria-describedby="meetingIDHelpBlock">
+        <input type="name" class="form-control" id="fullName" name="fullName" placeholder="Full Name" aria-describedby="meetingIDHelpBlock">
         <p id="meetingIDHelpBlock" class="form-text text-muted">
             Please enter your full name as known by the meeting planner.
         </p>
@@ -68,18 +77,6 @@
     <button type="submit" class="btn btn-primary float-right">Submit</button>
 </form>
 <br><br>
-
-
-<script type="text/javascript">
-//TODO:: Add event listener to "submit"
-//Make AJAX Request to the server with meeting ID and get the owner's name, list of invitees, which is sent back to client
-//If fullname = owner name, then redirect to check
-//If fullname = someone else's name,
-    //If fullname = an invitees name
-    //Then redirect to respond.html
-    
-    //Else alert
-</script>
 
 
 
