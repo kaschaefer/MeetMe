@@ -195,6 +195,7 @@ def getPertinentInfo(eventList):
         prettyEndTime = beautify_time(event[1])
         string = str(prettyBeginTime) + " - " + str(prettyEndTime) + ": "
         event.append(string)
+    if not isinstance(event[0], str) and not isinstance(event[0], str):
         event[0] = event[0].isoformat()
         event[1] = event[1].isoformat()
     for event in eventList:

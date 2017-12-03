@@ -201,7 +201,8 @@ def get_busy_times():
     eventList = getBlocks(allEvents, begin, begin_time, end, end_time)
     #upon return from getBlocks, eventList is a list of our free/busy times for the given day/time range
     #turn the arrow objects into ISO strings before sending the information to the server
-
+    for event in eventList:
+        app.logger.debug(event)
     result = getPertinentInfo(eventList)
     return flask.jsonify(result = result)
 
